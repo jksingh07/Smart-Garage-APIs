@@ -6,7 +6,7 @@ import pandas as pd
 SERVER_URL = 'http://4.229.225.201:5000/'
 
 # Routes 
-GET_LIGHTS = 'get_lights/'
+GET_LIGHTS = 'get_lights'
 GET_DOOR = 'get_door'
 GET_CO = 'get_co'
 
