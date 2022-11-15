@@ -1,0 +1,25 @@
+Test Case ID,Test Case Series,API Endpoint,Connection Status,Input Data,Expected Data,Actual Data,Test Status
+TC-0-00,Check if the Get Light route is able to fetch the right data from the cloud storage.,get_lights,200,none,"{'Light_Ext': 1, 'Light_L': 1, 'Light_M': 0, 'Light_R': 0}","{'Light_Ext': 1, 'Light_L': 1, 'Light_M': 1, 'Light_R': 1}",PASS
+TC-1-01,Check if the Get Door route is able to fetch the correct data from the cloud storage.,get_door,200,none,{'door': 0},{'door': -1},PASS
+TC-2-02,Check if the Get Co Level route is able to fetch the correct data from the cloud storage.,get_co,200,none,{'CO': 0},{'CO': 10},PASS
+TC-4-03,Check if the value set Door operation is able to set value on the cloud storage.,set_door,200,"{""command"": ""OPEN""}",{'status': 1},{'status': 1},PASS
+TC-1-04,Check if the Get Door route is able to fetch the correct data from the cloud storage.,get_door,200,none,{'door': 0},{'door': 1},PASS
+TC-4-05,Check if the value set Door operation is able to set value on the cloud storage.,set_door,200,"{""command"": ""STOP""}",{'status': 1},{'status': 1},PASS
+TC-1-06,Check if the Get Door route is able to fetch the correct data from the cloud storage.,get_door,200,none,{'door': 0},{'door': 0},PASS
+TC-4-07,Check if the value set Door operation is able to set value on the cloud storage.,set_door,200,"{""command"": ""CLOSE""}",{'status': 1},{'status': 1},PASS
+TC-1-08,Check if the Get Door route is able to fetch the correct data from the cloud storage.,get_door,200,none,{'door': 0},{'door': -1},PASS
+TC-3-09,Check if the value set Lights operation is able to set value on the cloud storage.,set_light,200,"{""Light"": ""Light_Ext"",""Value"":0}",{'status': 1},{'status': 1},PASS
+TC-3-10,Check if the value set Lights operation is able to set value on the cloud storage.,set_light,200,"{""Light"": ""Light_L"",""Value"":0}",{'status': 1},{'status': 1},PASS
+TC-3-11,Check if the value set Lights operation is able to set value on the cloud storage.,set_light,200,"{""Light"": ""Light_R"",""Value"":0}",{'status': 1},{'status': 1},PASS
+TC-3-12,Check if the value set Lights operation is able to set value on the cloud storage.,set_light,200,"{""Light"": ""Light_M"",""Value"":0}",{'status': 1},{'status': 1},PASS
+TC-0-13,Check if the Get Light route is able to fetch the right data from the cloud storage.,get_lights,200,none,"{'Light_Ext': 0, 'Light_L': 0, 'Light_M': 0, 'Light_R': 0}","{'Light_Ext': 0, 'Light_L': 0, 'Light_M': 0, 'Light_R': 0}",PASS
+TC-3-14,Check if the value set Lights operation is able to set value on the cloud storage.,set_light,200,"{""Light"":""Light_Ext"", ""Value"":1}",{'status': 1},{'status': 1},PASS
+TC-0-15,Check if the Get Light route is able to fetch the right data from the cloud storage.,get_lights,200,none,"{'Light_Ext': 1, 'Light_L': 0, 'Light_M': 0, 'Light_R': 0}","{'Light_Ext': 1, 'Light_L': 0, 'Light_M': 0, 'Light_R': 0}",PASS
+TC-3-16,Check if the value set Lights operation is able to set value on the cloud storage.,set_light,200,"{""Light"":""Light_L"", ""Value"":1}",{'status': 1},{'status': 1},PASS
+TC-0-17,Check if the Get Light route is able to fetch the right data from the cloud storage.,get_lights,200,none,"{'Light_Ext': 1, 'Light_L': 1, 'Light_M': 0, 'Light_R': 0}","{'Light_Ext': 1, 'Light_L': 1, 'Light_M': 0, 'Light_R': 0}",PASS
+TC-3-18,Check if the value set Lights operation is able to set value on the cloud storage.,set_light,200,"{""Light"":""Light_M"", ""Value"":1}",{'status': 1},{'status': 1},PASS
+TC-0-19,Check if the Get Light route is able to fetch the right data from the cloud storage.,get_lights,200,none,"{'Light_Ext': 1, 'Light_L': 1, 'Light_M': 1, 'Light_R': 0}","{'Light_Ext': 1, 'Light_L': 1, 'Light_M': 1, 'Light_R': 0}",PASS
+TC-3-20,Check if the value set Lights operation is able to set value on the cloud storage.,set_light,200,"{""Light"":""Light_R"", ""Value"":1}",{'status': 1},{'status': 1},PASS
+TC-0-21,Check if the Get Light route is able to fetch the right data from the cloud storage.,get_lights,200,none,"{'Light_Ext': 1, 'Light_L': 1, 'Light_M': 1, 'Light_R': 1}","{'Light_Ext': 1, 'Light_L': 1, 'Light_M': 1, 'Light_R': 1}",PASS
+TC-5-22,Check if the value set Co level operation is able to set value on the cloud storage.,set_co,200,"{""value"":10}",{'status': 1},{'status': 1},PASS
+TC-2-23,Check if the Get Co Level route is able to fetch the correct data from the cloud storage.,get_co,200,none,{'CO': 10},{'CO': 10},PASS
