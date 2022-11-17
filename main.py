@@ -13,14 +13,14 @@ def login():
     user_data = read_user_data_db()
     users = user_data['username']
     pswd = user_data['password']
-    
+
 ##    print(user_data)
 ##    print(username)
 ##    print(pswd, '\n', password)
 
     token = 0
     msg = ''
-    
+
     if username in users:
         idx = users.index(username)
         if password == pswd[idx]:
@@ -33,7 +33,7 @@ def login():
         token = -1
         msg = "User not found !"
 
-    return jsonify({'token':token, 'msg': msg})    
+    return jsonify({'token':token, 'msg': msg})
 
 @app.route('/sign_up', methods=['GET', 'POST'])
 def sign_up():
@@ -44,19 +44,19 @@ def sign_up():
         first = content["first_name"]
         last = content["last_name"]
         email = content["email_id"]
-    
+
         user_data = read_user_data_db()
         user_data = save_new_user(first, last, email, username, password, user_data)
         print(user_data)
-    
+
         if user_data == []:
             return jsonify({"status": 0})
         else:
-            
+
             return jsonify({"status": 1})
     except:
         return jsonify({"status": 0})
-    
+
 
 @app.route('/set_garage_data', methods=['GET', 'POST'])
 def set_garage_data():
@@ -65,23 +65,23 @@ def set_garage_data():
         item = content['item']
         value = content['value']
 
-        
+
         garage_data = read_garage_data_db()
-        
+
         if item in garage_data.keys():
             garage_data[item] = value
-        
-        
+
+
             with open('garage_db.json', 'w') as f:
                 json.dump(garage_data, f)
-            
+
             return jsonify({"status": 1})
         else:
             return jsonify({"status": 0})
 
     except:
         return jsonify({"status": 0})
-        
+
 
 
 
@@ -93,8 +93,8 @@ def get_garage_data():
         garage_data = read_garage_data_db()
 
         #print(item)
-        
-        
+
+
         if item != 'all':
             print(item, garage_data[item])
             return jsonify({'status':1, item: garage_data[item]})
@@ -138,7 +138,7 @@ def set_door():
 
 @app.route('/get_lights', methods=['GET', 'POST'])
 def get_lights():
-    garage_data = read_garage_data_db() 
+    garage_data = read_garage_data_db()
     return jsonify(garage_data['Light'])
 
 
@@ -156,16 +156,20 @@ def set_light():
             json.dump(garage_data, f)
 
         return jsonify({'status': 1})
-        
+
     except:
         return jsonify({"status": 0})
 
 
 
-@app.route('/get_co', methods=['GET', 'POST'])
+@app.route('/get_co', methods=['GET'])
 def get_co():
-    co_data = read_co_data_db() 
+    co_data = read_co_data_db()
     return jsonify(co_data)
+
+@app.route('/get_co', methods=[POST'])
+def get_co():
+    return "Dummy text"
 
 @app.route('/set_co', methods=['GET', 'POST'])
 def set_co():
@@ -174,12 +178,12 @@ def set_co():
         value = content['value']
         co_data = read_co_data_db()
         co_data['CO'] = value
-        
+
         with open('co_db.json', 'w') as f:
             json.dump(co_data, f)
 
         return jsonify({'status': 1})
-        
+
     except:
         return jsonify({"status": 0})
 
