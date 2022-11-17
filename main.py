@@ -167,7 +167,7 @@ def get_co():
     co_data = read_co_data_db()
     return jsonify(co_data)
 
-@app.route('/get_co', methods=[POST'])
+@app.route('/get_co', methods=['POST'])
 def get_co():
     return "Dummy text"
 
