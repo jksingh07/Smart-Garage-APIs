@@ -1,1 +1,1 @@
-sudo systemctl restart lib/systemd/system/main.service
+sudo lib/systemd/system start main.service
