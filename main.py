@@ -135,7 +135,7 @@ def set_light():
 
 @app.route('/test', methods=['GET'])
 def get_test():
-    return "test 1"
+    return "test 3"
 
 @app.route('/co', methods=['GET'])
 def get_co():
