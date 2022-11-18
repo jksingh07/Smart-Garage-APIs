@@ -1,2 +1,2 @@
-sudo systemctl daemon-reload
-sudo systemctl start /lib/systemd/system/main.service
+#!/bin/bash
+sudo systemctl restart main
