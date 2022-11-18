@@ -1,39 +1,43 @@
 from flask import Flask, jsonify, request
+from functools import wraps
 from utilities import *
+import datetime
+import jwt
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = "ASEREMOTECONTROLLERsmartgarage"
+app.config['ALGO'] = "HS256"
 
-@app.route('/login', methods = ['GET','POST'])
+def check_for_token(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        token = request.args.get('token')
+        if not token:
+            return jsonify({'message': 'Missing token'}), 403
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], app.config['ALGO'])
+        except Exception as e:
+            return jsonify({'messgae': 'Invalid token - ' + str(e)}), 403
+        return func(*args, **kwargs)
+    return wrapped
+
+@app.route('/login', methods = ['POST'])
 def login():
     content = request.json
     username = content["username"]
     password = content["password"]
-    #print(email_id, password)
 
     user_data = read_user_data_db()
     users = user_data['username']
     pswd = user_data['password']
-
-##    print(user_data)
-##    print(username)
-##    print(pswd, '\n', password)
-
-    token = 0
-    msg = ''
-
-    if username in users:
-        idx = users.index(username)
-        if password == pswd[idx]:
-            token = 1
-            msg = "Success"
-        else:
-            token = 0
-            msg = "Failed: Wrong Password !"
-    else:
-        token = -1
-        msg = "User not found !"
-
-    return jsonify({'token':token, 'msg': msg})
+    token = jwt.encode({
+        'user': users,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
+        },
+        app.config['SECRET_KEY'],
+        algorithm= app.config['ALGO']
+    )
+    return jsonify({'user':username , 'pswd': password, 'token': token})
 
 @app.route('/sign_up', methods=['GET', 'POST'])
 def sign_up():
@@ -80,10 +84,16 @@ def get_garage_data():
 
 
 @app.route('/door', methods=['GET'])
+@check_for_token
 def get_door():
     garage_data = read_garage_data_db()
     door = garage_data['door']
     return jsonify({'door': door})
+
+@app.route('/', methods=['GET'])
+@check_for_token
+def check_valid():
+    return jsonify({'valid': 1})
 
 @app.route('/door', methods=['POST'])
 def set_door():
