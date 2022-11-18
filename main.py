@@ -133,7 +133,9 @@ def set_light():
     except:
         return jsonify({"status": 0})
 
-
+@app.route('/test', methods=['GET'])
+def get_co():
+    return "test 1"
 
 @app.route('/co', methods=['GET'])
 def get_co():
