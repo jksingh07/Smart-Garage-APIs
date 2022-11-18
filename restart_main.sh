@@ -1,1 +1,1 @@
-sudo service /etc/systemd/system/main.service restart
+sudo systemctl status main
