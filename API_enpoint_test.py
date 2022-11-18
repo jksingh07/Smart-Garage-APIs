@@ -5,14 +5,14 @@ import pandas as pd
 
 SERVER_URL = 'http://4.229.225.201:5000/'
 
-# Routes 
-GET_LIGHTS = 'get_lights'
-GET_DOOR = 'get_door'
-GET_CO = 'get_co'
+# Routes
+GET_LIGHTS = 'light'
+GET_DOOR = 'door'
+GET_CO = 'co'
 
-SET_LIGHT = 'set_light'
-SET_DOOR = 'set_door'
-SET_CO = 'set_co'
+SET_LIGHT = 'light'
+SET_DOOR = 'door'
+SET_CO = 'co'
 
 compare = lambda x, y: collections.Counter(x) == collections.Counter(y)
 
@@ -33,19 +33,19 @@ def assert_endpoint(route, payload, value_range) :
     try:
         url = SERVER_URL + route
         req = requests.get(url)
-    
+
         stat_code = req.status_code
         response = req.text
-        
+
         if stat_code != 200:
             print(route, ":", stat_code, '=>', stat)
             return (route, stat_code, 'none',expected, actual, stat)
-        
+
         expected = json.loads(payload)
         actual = json.loads(response)
         #print("Expected :", expected)
         #print("Actual   :", actual)
-        
+
         if compare(expected.keys(), actual.keys()):
             stat = 'PASS'
         else :
@@ -63,7 +63,7 @@ def assert_endpoint(route, payload, value_range) :
     except Exception as e:
         print(route, ":", stat_code, '=>', stat)
         return (route, stat_code, 'none',expected, actual, stat)
-    
+
 def assert_endpoint_value(route, payload) :
     stat = 'FAIL'
     stat_code = -1
@@ -72,19 +72,19 @@ def assert_endpoint_value(route, payload) :
     try:
         url = SERVER_URL + route
         req = requests.get(url)
-    
+
         stat_code = req.status_code
         response = req.text
-        
+
         if stat_code != 200:
             print(route, ":", stat_code, '=>', stat)
             return (route, stat_code, 'none',expected, actual, stat)
-        
+
         expected = json.loads(payload)
         actual = json.loads(response)
         #print("Expected :", expected)
         #print("Actual   :", actual)
-        
+
         if compare(expected.keys(), actual.keys()):
             stat = 'PASS'
         else :
