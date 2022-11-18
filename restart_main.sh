@@ -1,2 +1,1 @@
-cd /lib/systemd/system
-sudo main.service start
+sudo /usr/bin/systemctl start main
