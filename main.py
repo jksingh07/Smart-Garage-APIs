@@ -134,7 +134,7 @@ def set_light():
         return jsonify({"status": 0})
 
 @app.route('/test', methods=['GET'])
-def get_co():
+def get_test():
     return "test 1"
 
 @app.route('/co', methods=['GET'])
