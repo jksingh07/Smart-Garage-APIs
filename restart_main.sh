@@ -1,2 +1,2 @@
 sudo systemctl daemon-reload
-sudo /usr/bin/systemctl start main
+sudo systemctl start /lib/systemd/system/main.service
