@@ -63,14 +63,12 @@ def sign_up():
 
 
 @app.route('/get_garage_data', methods=['GET', 'POST'])
+@check_for_token
 def get_garage_data():
     try:
         content = request.json
         item = content['item']
         garage_data = read_garage_data_db()
-
-        #print(item)
-
 
         if item != 'all':
             print(item, garage_data[item])
@@ -96,6 +94,7 @@ def check_valid():
     return jsonify({'valid': 1})
 
 @app.route('/door', methods=['POST'])
+@check_for_token
 def set_door():
     try:
         content = request.json
@@ -120,12 +119,14 @@ def set_door():
 
 
 @app.route('/light', methods=['GET'])
+@check_for_token
 def get_lights():
     garage_data = read_garage_data_db()
     return jsonify(garage_data['Light'])
 
 
 @app.route('/light', methods=['POST'])
+@check_for_token
 def set_light():
     try:
         content = request.json
@@ -144,15 +145,18 @@ def set_light():
         return jsonify({"status": 0})
 
 @app.route('/test', methods=['GET'])
+@check_for_token
 def get_test():
     return "test 3"
 
 @app.route('/co', methods=['GET'])
+@check_for_token
 def get_co():
     co_data = read_co_data_db()
     return jsonify(co_data)
 
 @app.route('/co', methods=['POST'])
+@check_for_token
 def set_co():
     try:
         content = request.json
