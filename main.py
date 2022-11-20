@@ -3,15 +3,16 @@ from functools import wraps
 from utilities import *
 import datetime
 import jwt
+import config
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "ASEREMOTECONTROLLERsmartgarage"
-app.config['ALGO'] = "HS256"
+app.config['SECRET_KEY'] = config.SECRET_KEY
+app.config['ALGO'] = config.TOKEN_ALGO
 
 def check_for_token(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
-        token = request.args.get('token')
+        token = request.args.get(config.KEY_TOKEN)
         if not token:
             return jsonify({'message': 'Missing token'}), 403
         try:
@@ -21,158 +22,156 @@ def check_for_token(func):
         return func(*args, **kwargs)
     return wrapped
 
-@app.route('/login', methods = ['POST'])
-def login():
-    content = request.json
-    username = content["username"]
-    password = content["password"]
+@app.route('/', methods=['GET'])
+@check_for_token
+def check_valid():
+    return jsonify({config.KEY_VALID: 1})
 
-    user_data = read_user_data_db()
-    users = user_data['username']
-    pswd = user_data['password']
+
+@app.route('/sim', methods = ['GET'])
+def simlogin():
     token = jwt.encode({
-        'user': users,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
+        'user': 'sim',
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=4)
         },
         app.config['SECRET_KEY'],
         algorithm= app.config['ALGO']
     )
-    return jsonify({'user':username , 'pswd': password, 'token': token})
+    return jsonify({config.KEY_TOKEN: token})
+
+@app.route('/login', methods = ['POST'])
+def login():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        password = content[config.KEY_PASSWORD]
+
+        login_db = read_user_data_db();
+        chk = check_valid_user(email, password, login_db)
+
+        if chk == 0 :
+            token = jwt.encode({
+                'user': email,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
+                },
+                app.config['SECRET_KEY'],
+                algorithm= app.config['ALGO']
+            )
+            return jsonify({config.KEY_TOKEN: token})
+        elif chk == -1:
+            raise Exception("User not registered in the database.")
+        elif chk == -2:
+            raise Exception("The password entered is incorrect, please enter the correct password.")
+    except Exception as e:
+        return jsonify({'status': str(e)}), 422
 
 @app.route('/sign_up', methods=['GET', 'POST'])
 def sign_up():
     try:
         content = request.json
-        username = content["username"]
-        password = content["password"]
-        first = content["first_name"]
-        last = content["last_name"]
-        email = content["email_id"]
+        email = content[config.KEY_EMAIL]
+        password = content[config.KEY_PASSWORD]
+        first = content[config.KEY_FIRST_N]
+        last = content[config.KEY_LAST_N]
+        role = "guest"
 
-        user_data = read_user_data_db()
-        user_data = save_new_user(first, last, email, username, password, user_data)
-        print(user_data)
-
-        if user_data == []:
-            return jsonify({"status": 0})
-        else:
-
+        login_db = read_user_data_db();
+        login_db,chk = save_new_user(email, password, first, last, role, login_db)
+        if chk == 0:
             return jsonify({"status": 1})
-    except:
-        return jsonify({"status": 0})
-
-
-@app.route('/get_garage_data', methods=['GET', 'POST'])
-@check_for_token
-def get_garage_data():
-    try:
-        content = request.json
-        item = content['item']
-        garage_data = read_garage_data_db()
-
-        if item != 'all':
-            print(item, garage_data[item])
-            return jsonify({'status':1, item: garage_data[item]})
-        else:
-            print(garage_data)
-            return jsonify({'status':1, 'data':garage_data})
-            #return garage_data
-    except:
-        return jsonify({"status": 0})
+        elif chk == -1 :
+            raise Exception("User already registered, Please try to login.")
+        elif chk == -2:
+            raise Exception("User write error in database, try again later.")
+    except Exception as e:
+        return jsonify({"status": str(e)})
 
 
 @app.route('/door', methods=['GET'])
 @check_for_token
 def get_door():
-    garage_data = read_garage_data_db()
-    door = garage_data['door']
-    return jsonify({'door': door})
-
-@app.route('/', methods=['GET'])
-@check_for_token
-def check_valid():
-    return jsonify({'valid': 1})
+    try:
+        garage_data = read_garage_data_db()
+        return jsonify({config.KEY_DOOR: config.get_command_stat(garage_data[config.KEY_DOOR])})
+    except Exception as e:
+        return jsonify({'status': str(e)})
 
 @app.route('/door', methods=['POST'])
 @check_for_token
 def set_door():
     try:
-        content = request.json
-        cmd = content['command']
         garage_data = read_garage_data_db()
-        if cmd == 'OPEN':
-            value = 1
-        elif cmd == 'CLOSE':
-            value = -1
-        else:
-            value = 0
-        garage_data['door'] = value
+        content = request.json
+        cmd = content[config.KEY_COMMAND]
 
-        with open('garage_db.json', 'w') as f:
-            json.dump(garage_data, f)
-
+        if cmd in config.KEY_DOOR_STAT:
+            garage_data[config.KEY_DOOR] = cmd
+            save_garage_data(garage_data)
+        else :
+            raise Exception("Invalid Door Status.")
         return jsonify({'status': 1})
-
-    except:
-        return jsonify({"status": 0})
-
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
 
 
 @app.route('/light', methods=['GET'])
 @check_for_token
 def get_lights():
-    garage_data = read_garage_data_db()
-    return jsonify(garage_data['Light'])
+    try:
+        garage_data = read_garage_data_db()
+        return jsonify(garage_data[config.KEY_LIGHT])
+    except Exception as e:
+        return jsonify({'status': str(e)})
 
 
 @app.route('/light', methods=['POST'])
 @check_for_token
 def set_light():
     try:
-        content = request.json
-        light = content['Light']
-        value = content['Value']
         garage_data = read_garage_data_db()
+        content = request.json
+        light = content[config.KEY_LIGHT]
+        value = content[config.KEY_VALUE]
 
-        garage_data['Light'][light] = value
-
-        with open('garage_db.json', 'w') as f:
-            json.dump(garage_data, f)
-
-        return jsonify({'status': 1})
-
+        if light in config.KEY_LIGHT_ID:
+            if 0 <= value <= 1:
+                garage_data[config.KEY_LIGHT][light] = value
+                save_garage_data(garage_data)
+            else :
+                raise Exception("Invalid value for Light Status.")
+        else :
+            raise Exception("Invalid Identifier for Light.")
+        return jsonify({"status": 1})
     except:
-        return jsonify({"status": 0})
-
-@app.route('/test', methods=['GET'])
-@check_for_token
-def get_test():
-    return "test 3"
+        return jsonify({'status': str(e)}), 422
 
 @app.route('/co', methods=['GET'])
 @check_for_token
 def get_co():
-    co_data = read_co_data_db()
-    return jsonify(co_data)
+    try:
+        garage_data = read_garage_data_db()
+        return jsonify({config.KEY_CO: garage_data[config.KEY_CO]})
+    except Exception as e:
+        return jsonify({'status': str(e)})
 
 @app.route('/co', methods=['POST'])
 @check_for_token
 def set_co():
     try:
+        garage_data = read_garage_data_db()
         content = request.json
-        value = content['value']
-        co_data = read_co_data_db()
-        co_data['CO'] = value
-
-        with open('co_db.json', 'w') as f:
-            json.dump(co_data, f)
-
+        value = content[config.KEY_CO]
+        if 0 <= value <= 1000:
+            garage_data[config.KEY_CO] = value
+            save_garage_data(garage_data)
+        else :
+            raise Exception("Invalid CO level.")
         return jsonify({'status': 1})
 
-    except:
-        return jsonify({"status": 0})
-
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
 
 
 if __name__ == "__main__":
+    print("Reading values")
     app.run()

@@ -1,67 +1,104 @@
 import json
-global garage_db
-
-global user_data, garage_data
-def get_lights_door():
-    global garage_data
-    return garage_data
-
-def get_user_data():
-    global user_data
-    return user_data
-
-def save_new_user(first, last, email, username, password, user_data):
-    try:
-        user_data['username'].append(username)
-        user_data['password'].append(password)
-        user_data['first_name'].append(first)
-        user_data['last_name'].append(last)
-        user_data['email_id'].append(email)
-
-        with open('login_db.json', 'w') as f:
-            json.dump(user_data, f)
-
-        return user_data
-    except:
-        return []
+import config
+import main
 
 
-
-#def check_login()   
-
-def set_light(light, action,  garage_data):
-    garage_data[light] = action
-    return garage_data
-
-def read_user_data_db():
-    with open('login_db.json', 'r') as myfile:
-        data=myfile.read()
-    login_data = json.loads(data)
-
-    
-    return login_data
-
+#
+# Local File Systems
+#
+# Read the saved garage Data
 def read_garage_data_db():
-    with open('garage_db.json', 'r') as myfile:
-        data=myfile.read()
-    garage_data = json.loads(data)
+    with open(config.GARAGE_DB, 'r') as file:
+        data = file.read()
+    d = json.loads(data)
+    return d
 
+
+# Read the saved user Data
+def read_user_data_db():
+    with open(config.LOGIN_DB, 'r') as file:
+        data = file.read()
+    d = json.loads(data)
+    return d
+
+# Save data to the local File System
+def save_garage_data(garage_data):
+    with open(config.GARAGE_DB, 'w') as file:
+        json.dump(garage_data, file)
+
+def save_login_data(login_db):
+    with open(config.LOGIN_DB, 'w') as file:
+        json.dump(login_db, file)
+
+#
+# User System
+#
+# Check if the user exist in login Data
+def check_valid_user(email, password, login_db):
+    if email not in login_db.keys():
+        # User not present
+        return -1
+    else :
+        user = login_db[email]
+        if user[config.KEY_PASSWORD] == password:
+            # Valid user
+            return 0
+        else :
+            # Password incorrect
+            return -2
+# Save new user data
+def save_new_user(email, password, first, last, role, login_db):
+    try:
+        if email in login_db.keys():
+            # User alreay registered
+            return login_db,-1
+        else :
+            login_db[email]  : {
+                config.KEY_EMAIL : email,
+                config.KEY_PASSWORD : password,
+                config.KEY_FIRST_N : first,
+                config.KEY_LAST_N : last,
+                config.KEY_ROLE : role
+            }
+        save_login_data(login_db)
+        return login_db,0
+    except Exception as e:
+        return login_db,-2
+
+#
+# Lighting System
+#
+# Read the lights status
+def get_lights_status(garage_data):
+    return garage_data[config.KEY_LIGHT]
+
+# set the status of the given light with given value
+def set_light_status(light, value, garage_data):
+    garage_data[config.KEY_LIGHT][light] = value
+    save_garage_data(garage_data)
     return garage_data
 
-def read_co_data_db():
-    with open('co_db.json', 'r') as myfile:
-        data=myfile.read()
-    co_data = json.loads(data)
+#
+# Door System
+#
+# Read the current Door Status
+def get_door_stat(garage_data):
+    return garage_data[config.KEY_DOOR]
 
-    return co_data
+def set_door_status(value, garage_data):
+    garage_data[config.KEY_DOOR] = value
+    save_garage_data(garage_data)
+    return garage_data
 
-#user_data, garage_data = read_db()
+#
+# Co system
+#
+# Read the current Co value
+def get_co_level(garage_data):
+    return garage_data[config.KEY_CO]
 
-#a = get_lights_door()
-#b = get_user_data()
-#print(a,b)
-#save_new_user('Bikramjeet', 'Singh', 'bikram@gmail.com', 'bikram', 'password', user_data)
-
-#garage_data = set_light('light_ext', 1, garage_data)
-#print(user_data, garage_data)
-
+# Read the current Co value
+def set_co_level(value, garage_data):
+    garage_data[config.KEY_CO] = value
+    save_garage_data(garage_data)
+    return garage_data
