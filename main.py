@@ -2,8 +2,10 @@ from flask import Flask, jsonify, request
 from functools import wraps
 from utilities import *
 import datetime
+import requests
 import jwt
 import config
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = config.SECRET_KEY
@@ -22,11 +24,23 @@ def check_for_token(func):
         return func(*args, **kwargs)
     return wrapped
 
-@app.route('/', methods=['GET'])
+@app.route('/', methods=['POST'])
 @check_for_token
 def check_valid():
-    return jsonify({config.KEY_VALID: 1})
-
+    try:
+        content = request.json
+        if (config.KEY_DEVICE in content.keys()):
+            deviceId = content[config.KEY_DEVICE]
+            user = content[config.KEY_EMAIL]
+            login_db = read_user_data_db();
+            if user in login_db.keys():
+                login_db[user][config.KEY_DEVICE] = deviceId
+                save_login_data(login_db)
+            else :
+                raise Exception("User not registered. Plz sign up again.")
+        return jsonify({config.KEY_VALID: 1})
+    except Exception as e:
+        return jsonify({config.KEY_VALID: str(e)}), 422
 
 @app.route('/sim', methods = ['GET'])
 def simlogin():
@@ -45,11 +59,14 @@ def login():
         content = request.json
         email = content[config.KEY_EMAIL]
         password = content[config.KEY_PASSWORD]
-
+        deviceId = content[config.KEY_DEVICE]
         login_db = read_user_data_db();
         chk = check_valid_user(email, password, login_db)
 
         if chk == 0 :
+            if deviceId != "":
+                login_db[email][config.KEY_DEVICE] = deviceId
+                save_login_data(login_db)
             token = jwt.encode({
                 'user': email,
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
@@ -92,7 +109,7 @@ def sign_up():
 def get_door():
     try:
         garage_data = read_garage_data_db()
-        return jsonify({config.KEY_DOOR: config.get_command_stat(garage_data[config.KEY_DOOR])})
+        return jsonify({config.KEY_DOOR: garage_data[config.KEY_DOOR]})
     except Exception as e:
         return jsonify({'status': str(e)})
 
@@ -104,7 +121,7 @@ def set_door():
         content = request.json
         cmd = content[config.KEY_COMMAND]
 
-        if cmd in config.KEY_DOOR_STAT:
+        if -1 <= cmd <= 1:
             garage_data[config.KEY_DOOR] = cmd
             save_garage_data(garage_data)
         else :
@@ -164,12 +181,24 @@ def set_co():
         if 0 <= value <= 1000:
             garage_data[config.KEY_CO] = value
             save_garage_data(garage_data)
+            if (value > 50) :
+                send_message()
         else :
             raise Exception("Invalid CO level.")
         return jsonify({'status': 1})
 
     except Exception as e:
         return jsonify({"status": str(e)}), 422
+
+@app.route('/notify', methods=['POST'])
+@check_for_token
+def send_message():
+    url = 'https://onesignal.com/api/v1/notifications'
+    headers = {'Content-type': 'application/json', 'Authorization': "Basic YTA3NDk3NDUtNjE0OC00ZjNiLTkxNDgtNTQ4MTU5MDRiYzVj"}
+    body = '{"app_id":"b22e4e51-0fdf-4c75-9d95-f023e9c32c74", "included_segments":["Subscribed Users"], "data": {"Co": 50}, "headings": {"en":"Emergency - CO Level Too High"},"contents": {"en": "The CO Level inside your garage are above normal. Please, try not to enter the garage untill the garage is properly vented."}}'
+    req = requests.post(url, data=body, headers=headers)
+    #response = 10
+    return jsonify({"status": req.text})
 
 
 if __name__ == "__main__":

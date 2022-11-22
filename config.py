@@ -14,6 +14,7 @@ KEY_COMMAND = "Command"
 KEY_VALID = "Valid"
 KEY_TOKEN = "token"
 KEY_VALUE = "Value"
+KEY_DEVICE = "Device"
 
 KEY_EMAIL = "email"
 KEY_PASSWORD = "password"
@@ -24,11 +25,3 @@ KEY_ROLE = "role"
 
 KEY_LIGHT_ID = ["Light_Ext", "Light_L", "Light_M", "Light_R"]
 KEY_DOOR_STAT = ["OPEN", "CLOSE", "STOP"]
-
-def get_command_stat(cmd):
-    if cmd == 'OPEN':
-        return 1
-    elif cmd == 'CLOSE':
-        return -1
-    elif cmd == 'STOP':
-        return 0

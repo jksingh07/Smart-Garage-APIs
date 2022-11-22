@@ -53,7 +53,7 @@ def save_new_user(email, password, first, last, role, login_db):
             # User alreay registered
             return login_db,-1
         else :
-            login_db[email]  : {
+            login_db[email]  = {
                 config.KEY_EMAIL : email,
                 config.KEY_PASSWORD : password,
                 config.KEY_FIRST_N : first,
