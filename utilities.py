@@ -1,7 +1,7 @@
 import json
 import config
 import main
-
+import random
 
 #
 # Local File Systems
@@ -21,6 +21,20 @@ def read_user_data_db():
     d = json.loads(data)
     return d
 
+# Read the saved car Data
+def read_car_data_db():
+    with open(config.CAR_DB, 'r') as file:
+        data = file.read()
+    d = json.loads(data)
+    return d
+
+# Read the saved guest Data
+def read_guest_data_db():
+    with open(config.GUEST_DB, 'r') as file:
+        data = file.read()
+    d = json.loads(data)
+    return d
+
 # Save data to the local File System
 def save_garage_data(garage_data):
     with open(config.GARAGE_DB, 'w') as file:
@@ -29,6 +43,10 @@ def save_garage_data(garage_data):
 def save_login_data(login_db):
     with open(config.LOGIN_DB, 'w') as file:
         json.dump(login_db, file)
+
+def save_guest_data(guest_db):
+    with open(config.GUEST_DB, 'w') as file:
+        json.dump(guest_db, file)
 
 #
 # User System
@@ -46,6 +64,7 @@ def check_valid_user(email, password, login_db):
         else :
             # Password incorrect
             return -2
+
 # Save new user data
 def save_new_user(email, password, first, last, role, login_db):
     try:
@@ -65,6 +84,46 @@ def save_new_user(email, password, first, last, role, login_db):
     except Exception as e:
         return login_db,-2
 
+#
+# Guest Access
+#
+# Check if the user exist in Guest Data
+def check_valid_guest(email, password, guest_db):
+    if email not in guest_db.keys():
+        # User not present
+        return -1
+    else :
+        user = guest_db[email]
+        if user[config.KEY_PASSWORD] == password:
+            # Valid user
+            return 0
+        else :
+            # Password incorrect
+            return -2
+
+# save newly generated guest data
+def save_new_guest(email, password, guest_db):
+    try:
+        if email in guest_db.keys():
+            # User alreay registered
+            email_d = email.split(config.KEY_GUEST_CONJUSCTION)
+            email = email_d[0] + config.KEY_GUEST_CONJUSCTION + str(int(email_d[1]) + 1)
+        guest_db[email]  = {
+                config.KEY_EMAIL : email,
+                config.KEY_PASSWORD : password,
+        }
+        save_guest_data(guest_db)
+        return email, password ,0
+    except Exception as e:
+        return email, e,-2
+
+# generate random password
+def generate_pasword():
+    pas = ""
+    for i in range(10):
+        rand = random.randint(97,123)
+        pas += chr(rand)
+    return pas
 #
 # Lighting System
 #

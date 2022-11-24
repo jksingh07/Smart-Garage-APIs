@@ -82,7 +82,64 @@ def login():
     except Exception as e:
         return jsonify({'status': str(e)}), 422
 
-@app.route('/sign_up', methods=['GET', 'POST'])
+@app.route('/login_guest', methods = ['POST'])
+def guest_login():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        password = content[config.KEY_PASSWORD]
+        guest_db = read_guest_data_db();
+        chk = check_valid_guest(email, password, guest_db)
+
+        if chk == 0 :
+            token = jwt.encode({
+                'user': email,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
+                },
+                app.config['SECRET_KEY'],
+                algorithm= app.config['ALGO']
+            )
+            return jsonify({config.KEY_TOKEN: token})
+        elif chk == -1:
+            raise Exception("User not registered in the database.")
+        elif chk == -2:
+            raise Exception("The password entered is incorrect, please enter the correct password.")
+    except Exception as e:
+        return jsonify({'status': str(e)}), 422
+
+@app.route('/add_guest', methods=['POST'])
+@check_for_token
+def add_guest():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        guest_db = read_guest_data_db()
+        guest_email = email + config.KEY_GUEST_CONJUSCTION + str(len(guest_db))
+        password = generate_pasword()
+        email, password,chk = save_new_guest(guest_email, password, guest_db)
+        if chk == 0:
+            return jsonify({config.KEY_EMAIL: email, config.KEY_PASSWORD: password})
+        elif chk == -2:
+            raise Exception("Unable to create new guest, try again later." + str(password))
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
+@app.route('/guest', methods=['GET'])
+@check_for_token
+def get_guest():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        guest_db = read_guest_data_db()
+        guests = []
+        for guest in guest_db:
+            if guest.split(config.KEY_GUEST_CONJUSCTION)[0] == email:
+                guests.append(guest_db[guest])
+        return jsonify(guests)
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
+@app.route('/sign_up', methods=['POST'])
 def sign_up():
     try:
         content = request.json
