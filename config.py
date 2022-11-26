@@ -30,7 +30,7 @@ KEY_LAST_UPDATE = "LastestUpdate"
 KEY_LAST_SERVICE_DATE = "LSDate"
 KEY_LAST_SERVICE_MILAGE = "LSMilage"
 KEY_OIL_TYPE = "OilType"
-KEY_TYERS = "Tyers"
+KEY_TYERS = "Tiers"
 KEY_AIR_FILTER = "AirFilter"
 KEY_BRAKE_OIL = "BrakeOil"
 

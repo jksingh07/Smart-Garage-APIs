@@ -33,9 +33,12 @@ def check_valid():
             deviceId = content[config.KEY_DEVICE]
             user = content[config.KEY_EMAIL]
             login_db = read_user_data_db();
+            guest_db = read_guest_data_db();
             if user in login_db.keys():
                 login_db[user][config.KEY_DEVICE] = deviceId
                 save_login_data(login_db)
+            elif user in guest_db.keys():
+                return jsonify({config.KEY_VALID: 1})
             else :
                 raise Exception("User not registered. Plz sign up again.")
         return jsonify({config.KEY_VALID: 1})
@@ -114,7 +117,7 @@ def add_guest():
         content = request.json
         email = content[config.KEY_EMAIL]
         guest_db = read_guest_data_db()
-        guest_email = email + config.KEY_GUEST_CONJUSCTION + str(len(guest_db))
+        guest_email = email + config.KEY_GUEST_CONJUSCTION + str(len(guest_db) - 1)
         password = generate_pasword()
         email, password,chk = save_new_guest(guest_email, password, guest_db)
         if chk == 0:
@@ -124,7 +127,33 @@ def add_guest():
     except Exception as e:
         return jsonify({"status": str(e)}), 422
 
-@app.route('/guest', methods=['GET'])
+@app.route('/revoke_guest', methods=['POST'])
+@check_for_token
+def revoke_guest():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        password = content[config.KEY_PASSWORD]
+
+        guest_db = read_guest_data_db()
+        if email not in guest_db.keys():
+            # User not present
+            raise Exception("The guest email provided is not valid.")
+        else :
+            user = guest_db[email]
+            if user[config.KEY_PASSWORD] == password:
+                # Valid user
+                del guest_db[email]
+                save_guest_data(guest_db)
+                return jsonify({"status": 1})
+            else :
+                # Password incorrect
+                raise Exception("The password and email conbination provided is not valid.")
+
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
+@app.route('/guest', methods=['POST'])
 @check_for_token
 def get_guest():
     try:
@@ -139,6 +168,41 @@ def get_guest():
     except Exception as e:
         return jsonify({"status": str(e)}), 422
 
+@app.route('/user', methods=['POST'])
+@check_for_token
+def get_user():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        user_db = read_user_data_db()
+        if email in user_db.keys():
+            return jsonify(user_db[email])
+        else:
+            raise Exception("User not found in the login db.");
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
+@app.route('/update_profile', methods=['POST'])
+@check_for_token
+def update_user_profile():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        first_name = content[config.KEY_FIRST_N]
+        last_name = content[config.KEY_LAST_N]
+        user_db = read_user_data_db()
+        if first_name == "" or last_name == "" :
+            raise Exception("The first Name or last Name is invalid.")
+        if email in user_db.keys():
+            user_db[email][config.KEY_FIRST_N] = first_name
+            user_db[email][config.KEY_LAST_N] = last_name
+            save_login_data(user_db)
+            return jsonify({"status":1})
+        else:
+            raise Exception("User not found in the login db.");
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
 @app.route('/sign_up', methods=['POST'])
 def sign_up():
     try:
@@ -147,7 +211,7 @@ def sign_up():
         password = content[config.KEY_PASSWORD]
         first = content[config.KEY_FIRST_N]
         last = content[config.KEY_LAST_N]
-        role = "guest"
+        role = "admin"
 
         login_db = read_user_data_db();
         login_db,chk = save_new_user(email, password, first, last, role, login_db)
@@ -246,6 +310,81 @@ def set_co():
 
     except Exception as e:
         return jsonify({"status": str(e)}), 422
+
+@app.route('/vehicle', methods=['POST'])
+@check_for_token
+def get_cars():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        car_data = read_car_data_db()
+        cars = []
+        for car in car_data:
+            if car.split(config.KEY_GUEST_CONJUSCTION)[0] == email:
+                cars.append(car_data[car])
+        return jsonify(cars)
+    except Exception as e:
+        return jsonify({'status': str(e)})
+
+@app.route('/add_vehicle', methods=['POST'])
+@check_for_token
+def add_vehicle():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        car_id = content[config.KEY_CAR_ID]
+        milage = content[config.KEY_MILAGE]
+        ls_date = content[config.KEY_LAST_SERVICE_DATE]
+        ls_milage = content[config.KEY_LAST_SERVICE_MILAGE]
+        oilType = content[config.KEY_OIL_TYPE]
+        tiers = content[config.KEY_TYERS]
+        air_filter = content[config.KEY_AIR_FILTER]
+        brake_oil = content[config.KEY_BRAKE_OIL]
+
+        car_id_key = email + config.KEY_GUEST_CONJUSCTION + car_id
+
+        lastest_update = datetime.date.today().strftime("%d-%m-%Y")
+
+        car_data = read_car_data_db()
+
+        if car_id_key not in car_data.keys():
+            car_data[car_id_key] = {
+                config.KEY_CAR_ID : car_id,
+                config.KEY_MILAGE : milage,
+                config.KEY_LAST_SERVICE_DATE : ls_date,
+                config.KEY_LAST_SERVICE_MILAGE : ls_milage,
+                config.KEY_OIL_TYPE: oilType,
+                config.KEY_TYERS : tiers,
+                config.KEY_AIR_FILTER: air_filter,
+                config.KEY_BRAKE_OIL: brake_oil,
+                config.KEY_LAST_UPDATE: lastest_update,
+                }
+            save_car_data(car_data)
+            return jsonify({"status": 1})
+        else:
+            raise Exception("Unable to add new vehicle, try again later." + str(car_id))
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
+@app.route('/remove_vehicle', methods=['POST'])
+@check_for_token
+def remove_vehicle():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        car_id = content[config.KEY_CAR_ID]
+        car_id = email + config.KEY_GUEST_CONJUSCTION + car_id
+        car_db = read_car_data_db()
+        if car_id not in car_db.keys():
+            # Vehicle not present
+            raise Exception("The Vehicle ID provided is not valid.")
+        else :
+            del car_db[car_id]
+            save_car_data(car_db)
+            return jsonify({"status": 1})
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
 
 @app.route('/notify', methods=['POST'])
 @check_for_token

@@ -48,6 +48,10 @@ def save_guest_data(guest_db):
     with open(config.GUEST_DB, 'w') as file:
         json.dump(guest_db, file)
 
+def save_car_data(car_db):
+    with open(config.CAR_DB, 'w') as file:
+        json.dump(car_db, file)
+
 #
 # User System
 #
@@ -101,13 +105,20 @@ def check_valid_guest(email, password, guest_db):
             # Password incorrect
             return -2
 
+def get_max_guest_id(email, guest_db):
+    email_d = email.split(config.KEY_GUEST_CONJUSCTION)
+    for i in range(3):
+        chk_e = email_d[0] + config.KEY_GUEST_CONJUSCTION + str(i)
+        if (chk_e not in guest_db.keys()):
+            return chk_e
+
+
 # save newly generated guest data
 def save_new_guest(email, password, guest_db):
     try:
         if email in guest_db.keys():
             # User alreay registered
-            email_d = email.split(config.KEY_GUEST_CONJUSCTION)
-            email = email_d[0] + config.KEY_GUEST_CONJUSCTION + str(int(email_d[1]) + 1)
+            email = get_max_guest_id(email, guest_db)
         guest_db[email]  = {
                 config.KEY_EMAIL : email,
                 config.KEY_PASSWORD : password,
@@ -121,7 +132,7 @@ def save_new_guest(email, password, guest_db):
 def generate_pasword():
     pas = ""
     for i in range(10):
-        rand = random.randint(97,123)
+        rand = random.randint(97,122)
         pas += chr(rand)
     return pas
 #
