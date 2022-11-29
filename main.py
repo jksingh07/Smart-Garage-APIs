@@ -386,15 +386,69 @@ def remove_vehicle():
         return jsonify({"status": str(e)}), 422
 
 
-@app.route('/notify', methods=['POST'])
+@app.route('/notify_poor_health', methods=['POST'])
 @check_for_token
-def send_message():
-    url = 'https://onesignal.com/api/v1/notifications'
-    headers = {'Content-type': 'application/json', 'Authorization': "Basic YTA3NDk3NDUtNjE0OC00ZjNiLTkxNDgtNTQ4MTU5MDRiYzVj"}
-    body = '{"app_id":"b22e4e51-0fdf-4c75-9d95-f023e9c32c74", "included_segments":["Subscribed Users"], "data": {"Co": 50}, "headings": {"en":"Emergency - CO Level Too High"},"contents": {"en": "The CO Level inside your garage are above normal. Please, try not to enter the garage untill the garage is properly vented."}}'
-    req = requests.post(url, data=body, headers=headers)
-    #response = 10
-    return jsonify({"status": req.text})
+def send_poor_health_notification():
+    try:
+        content = request.json
+        car_ID = content[config.KEY_CAR_ID]
+        email = car_ID.split(config.KEY_GUEST_CONJUSCTION)[0]
+        carID = car_ID.split(config.KEY_GUEST_CONJUSCTION)[1]
+        health = content[config.KEY_HEALTH]
+        component = content[config.KEY_COMPONENT]
+        url = 'https://onesignal.com/api/v1/notifications'
+        headers = {'Content-type': 'application/json', 'Authorization': "Basic YTA3NDk3NDUtNjE0OC00ZjNiLTkxNDgtNTQ4MTU5MDRiYzVj"}
+        body = json.dumps({
+        "app_id":"b22e4e51-0fdf-4c75-9d95-f023e9c32c74",
+        "included_segments":["Subscribed Users"],
+        "priority": 10,
+        "headings": {"en":"Poor " + component + " Health"},
+        "contents": {"en": "You vehicle " + carID + "'s "+ component + " health levels are below the standard threshold. Changing the " + component + " is highly recommended within the upcoming weeks."},
+        "data": {
+               "CarID": carID,
+               "Mode": health
+         },
+        })
+        req = requests.post(url, data=body, headers=headers)
+        return jsonify({"status": req.text})
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
+@app.route('/notify_tiers', methods=['POST'])
+@check_for_token
+def send_tiers_notification():
+    try:
+        content = request.json
+        carID = content[config.KEY_CAR_ID]
+        vehcile = carID.split(config.KEY_GUEST_CONJUSCTION)[1]
+        tiers = content[config.KEY_TYERS]
+        msg = ""
+        if tiers == "Winter":
+            msg = "Winter is coming!! Changing you " + vehcile + "'s Tiers to winter set is recommended."
+        elif tiers == "Summer":
+            msg = "Summer is coming!! Changing you " + vehcile + "'s Tiers to summer set is recommended."
+        else :
+            msg = "Great to hear that you are using All season Tiers set for " + vehcile + ", But changing to " + tiers + " set is highly recommended."
+        url = 'https://onesignal.com/api/v1/notifications'
+        headers = {'Content-type': 'application/json', 'Authorization': "Basic YTA3NDk3NDUtNjE0OC00ZjNiLTkxNDgtNTQ4MTU5MDRiYzVj"}
+        body = json.dumps({
+        "app_id":"b22e4e51-0fdf-4c75-9d95-f023e9c32c74",
+        "included_segments":["Subscribed Users"],
+        "priority": 10,
+        "headings": {"en":"Tiers Change recommended"},
+        "contents": {"en": msg},
+        "data": {
+               "CarID": carID,
+               "Mode": tiers
+         },
+        })
+        req = requests.post(url, data=body, headers=headers)
+        #response = 10
+        return jsonify({"status": req.text})
+    except Exception as e:
+        return jsonify({"status": str(e)})
+
+
 
 
 if __name__ == "__main__":

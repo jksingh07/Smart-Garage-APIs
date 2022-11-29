@@ -34,7 +34,10 @@ KEY_TYERS = "Tiers"
 KEY_AIR_FILTER = "AirFilter"
 KEY_BRAKE_OIL = "BrakeOil"
 
+
 KEY_GUEST_CONJUSCTION = "+ASE#"
+KEY_HEALTH = "Health"
+KEY_COMPONENT = "Component"
 
 KEY_LIGHT_ID = ["Light_Ext", "Light_L", "Light_M", "Light_R"]
 KEY_DOOR_STAT = ["OPEN", "CLOSE", "STOP"]
