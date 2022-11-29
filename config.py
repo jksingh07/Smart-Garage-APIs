@@ -8,6 +8,7 @@ GARAGE_DB = os.path.join(DATA_ROOT, "garage_db.json")
 LOGIN_DB = os.path.join(DATA_ROOT, "login_db.json")
 CAR_DB   = os.path.join(DATA_ROOT, "car_db.json")
 GUEST_DB = os.path.join(DATA_ROOT, "guest_db.json")
+NOTIFY_DB = os.path.join(DATA_ROOT, "notify_db.json")
 
 KEY_LIGHT = "Light"
 KEY_DOOR = "Door"

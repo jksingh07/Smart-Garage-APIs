@@ -1,6 +1,7 @@
 import json
 import config
 import os
+import datetime
 
 def create_user_db():
     user_data = {
@@ -54,20 +55,24 @@ def create_garage_db():
 
 
 if __name__ == '__main__':
-    if (not os.path.exists(config.DATA_ROOT)) :
-        os.mkdir(config.DATA_ROOT)
-    user_data = create_user_db()
-    with open(config.LOGIN_DB, 'w') as f:
-        json.dump(user_data, f)
+    # if (not os.path.exists(config.DATA_ROOT)) :
+    #     os.mkdir(config.DATA_ROOT)
+    # user_data = create_user_db()
+    # with open(config.LOGIN_DB, 'w') as f:
+    #     json.dump(user_data, f)
+    #
+    # garage_data = create_garage_db()
+    # with open(config.GARAGE_DB, 'w') as f:
+    #     json.dump(garage_data, f)
+    #
+    # car_data = create_car_db()
+    # with open(config.CAR_DB, 'w') as f:
+    #     json.dump(car_data, f)
+    #
+    # guest_data = create_guest_db()
+    # with open(config.GUEST_DB, 'w') as f:
+    #     json.dump(guest_data, f)
 
-    garage_data = create_garage_db()
-    with open(config.GARAGE_DB, 'w') as f:
-        json.dump(garage_data, f)
-
-    car_data = create_car_db()
-    with open(config.CAR_DB, 'w') as f:
-        json.dump(car_data, f)
-
-    guest_data = create_guest_db()
-    with open(config.GUEST_DB, 'w') as f:
-        json.dump(guest_data, f)
+    notification_records = {"CO": datetime.datetime.timestamp(datetime.datetime.now())}
+    with open(config.NOTIFY_DB, 'w') as f:
+            json.dump(notification_records, f)

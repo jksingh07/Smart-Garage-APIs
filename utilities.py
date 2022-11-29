@@ -35,6 +35,13 @@ def read_guest_data_db():
     d = json.loads(data)
     return d
 
+# Read the saved notification Data
+def read_notify_data_db():
+    with open(config.NOTIFY_DB, 'r') as file:
+        data = file.read()
+    d = json.loads(data)
+    return d
+
 # Save data to the local File System
 def save_garage_data(garage_data):
     with open(config.GARAGE_DB, 'w') as file:
@@ -51,6 +58,10 @@ def save_guest_data(guest_db):
 def save_car_data(car_db):
     with open(config.CAR_DB, 'w') as file:
         json.dump(car_db, file)
+
+def save_notify_data(n_db):
+    with open(config.NOTIFY_DB, 'w') as file:
+        json.dump(n_db, file)
 
 #
 # User System

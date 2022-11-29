@@ -302,8 +302,15 @@ def set_co():
         if 0 <= value <= 1000:
             garage_data[config.KEY_CO] = value
             save_garage_data(garage_data)
+            # ead to check if notification was sent
             if (value > 50) :
-                send_message()
+                n_db = read_notify_data_db()
+                cur_n = datetime.datetime.now()
+                old_n = datetime.datetime.fromtimestamp(n_db['CO'])
+                if (cur_n-old_n).total_seconds() > 10 :
+                    n_db['CO'] = datetime.datetime.timestamp(datetime.datetime.now())
+                    save_notify_data(n_db)
+                    send_co_notification()
         else :
             raise Exception("Invalid CO level.")
         return jsonify({'status': 1})
@@ -365,6 +372,137 @@ def add_vehicle():
             raise Exception("Unable to add new vehicle, try again later." + str(car_id))
     except Exception as e:
         return jsonify({"status": str(e)}), 422
+
+@app.route('/update_tiers', methods=['POST'])
+@check_for_token
+def update_tiers():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        car_id = content[config.KEY_CAR_ID]
+        tiers = content[config.KEY_TYERS]
+        car_id = email + config.KEY_GUEST_CONJUSCTION + car_id
+        car_db = read_car_data_db()
+        if car_id not in car_db.keys():
+            # Vehicle not present
+            raise Exception("The Vehicle ID provided is not valid.")
+        else :
+            car_db[car_id][config.KEY_TYERS] = tiers
+            save_car_data(car_db)
+            return jsonify({"status": 1})
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
+@app.route('/update_milage', methods=['POST'])
+@check_for_token
+def update_milag():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        car_id = content[config.KEY_CAR_ID]
+        milage = content[config.KEY_MILAGE]
+        car_id = email + config.KEY_GUEST_CONJUSCTION + car_id
+        lastest_update = datetime.date.today().strftime("%d-%m-%Y")
+        car_db = read_car_data_db()
+        if car_id not in car_db.keys():
+            # Vehicle not present
+            raise Exception("The Vehicle ID provided is not valid.")
+        else :
+            if (car_db[car_id][config.KEY_MILAGE] <= milage) :
+                car_db[car_id][config.KEY_MILAGE] = milage
+                car_db[car_id][config.KEY_LAST_UPDATE] = lastest_update
+                save_car_data(car_db)
+                return jsonify({"status": 1})
+            else:
+                raise Exception("The Odometer reading (milage) is in valid.")
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
+@app.route('/update_engine', methods=['POST'])
+@check_for_token
+def update_engine():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        car_id = content[config.KEY_CAR_ID]
+        milage = content[config.KEY_LAST_SERVICE_MILAGE]
+        oilType = content[config.KEY_OIL_TYPE]
+        car_id = email + config.KEY_GUEST_CONJUSCTION + car_id
+        car_db = read_car_data_db()
+        if car_id not in car_db.keys():
+            # Vehicle not present
+            raise Exception("The Vehicle ID provided is not valid.")
+        else :
+            if (car_db[car_id][config.KEY_LAST_SERVICE_MILAGE] <= milage) :
+                car_db[car_id][config.KEY_LAST_SERVICE_MILAGE] = milage
+                car_db[car_id][config.KEY_OIL_TYPE] = oilType
+                if (milage > car_db[car_id][config.KEY_MILAGE]) :
+                    car_db[car_id][config.KEY_MILAGE] = milage
+                    lastest_update = datetime.date.today().strftime("%d-%m-%Y")
+                    car_db[car_id][config.KEY_LAST_UPDATE] = lastest_update
+                save_car_data(car_db)
+                return jsonify({"status": 1})
+            else:
+                raise Exception("The Odometer reading (milage) is in valid.")
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
+@app.route('/update_brake', methods=['POST'])
+@check_for_token
+def update_brake():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        car_id = content[config.KEY_CAR_ID]
+        milage = content[config.KEY_BRAKE_OIL]
+        car_id = email + config.KEY_GUEST_CONJUSCTION + car_id
+        car_db = read_car_data_db()
+        if car_id not in car_db.keys():
+            # Vehicle not present
+            raise Exception("The Vehicle ID provided is not valid.")
+        else :
+            if (car_db[car_id][config.KEY_BRAKE_OIL] <= milage) :
+                car_db[car_id][config.KEY_BRAKE_OIL] = milage
+                if (milage > car_db[car_id][config.KEY_MILAGE]) :
+                    car_db[car_id][config.KEY_MILAGE] = milage
+                    car_db[car_id][config.KEY_LAST_SERVICE_MILAGE] = milage - 100
+                    lastest_update = datetime.date.today().strftime("%d-%m-%Y")
+                    car_db[car_id][config.KEY_LAST_UPDATE] = lastest_update
+                save_car_data(car_db)
+                return jsonify({"status": 1})
+            else:
+                raise Exception("The Odometer reading (milage) is in valid.")
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
+@app.route('/update_air', methods=['POST'])
+@check_for_token
+def update_air():
+    try:
+        content = request.json
+        email = content[config.KEY_EMAIL]
+        car_id = content[config.KEY_CAR_ID]
+        milage = content[config.KEY_AIR_FILTER]
+        car_id = email + config.KEY_GUEST_CONJUSCTION + car_id
+        car_db = read_car_data_db()
+        if car_id not in car_db.keys():
+            # Vehicle not present
+            raise Exception("The Vehicle ID provided is not valid.")
+        else :
+            if (car_db[car_id][config.KEY_AIR_FILTER] <= milage) :
+                car_db[car_id][config.KEY_AIR_FILTER] = milage
+                if (milage > car_db[car_id][config.KEY_MILAGE]) :
+                    car_db[car_id][config.KEY_MILAGE] = milage
+                    car_db[car_id][config.KEY_LAST_SERVICE_MILAGE] = milage - 100
+                    lastest_update = datetime.date.today().strftime("%d-%m-%Y")
+                    car_db[car_id][config.KEY_LAST_UPDATE] = lastest_update
+                save_car_data(car_db)
+                return jsonify({"status": 1})
+            else:
+                raise Exception("The Odometer reading (milage) is in valid.")
+    except Exception as e:
+        return jsonify({"status": str(e)}), 422
+
 
 @app.route('/remove_vehicle', methods=['POST'])
 @check_for_token
@@ -443,13 +581,32 @@ def send_tiers_notification():
          },
         })
         req = requests.post(url, data=body, headers=headers)
-        #response = 10
         return jsonify({"status": req.text})
     except Exception as e:
         return jsonify({"status": str(e)})
 
-
-
+@app.route('/notify_co', methods=['POST'])
+@check_for_token
+def send_co_notification():
+    try:
+        content = request.json
+        url = 'https://onesignal.com/api/v1/notifications'
+        headers = {'Content-type': 'application/json', 'Authorization': "Basic YTA3NDk3NDUtNjE0OC00ZjNiLTkxNDgtNTQ4MTU5MDRiYzVj"}
+        body = json.dumps({
+        "app_id":"b22e4e51-0fdf-4c75-9d95-f023e9c32c74",
+        "included_segments":["Subscribed Users"],
+        "priority": 10,
+        "headings": {"en":"Emergency - CO Level Too High"},
+        "contents": {"en": "The CO Level inside your garage are above normal. Please, try not to enter the garage untill the garage is properly vented."},
+        "data": {
+               "CarID": "None",
+               "Mode": "CO"
+         },
+        })
+        req = requests.post(url, data=body, headers=headers)
+        return jsonify({"status": req.text})
+    except Exception as e:
+        return jsonify({"status": str(e)})
 
 if __name__ == "__main__":
     print("Reading values")
